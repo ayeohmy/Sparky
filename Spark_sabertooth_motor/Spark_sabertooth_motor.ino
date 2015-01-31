@@ -92,9 +92,14 @@ void loop(){
   byte dist_front_left = ir_front_left.read();
   
   // moving forward if nothing is in the front (look in the array (middle values))
-  // while move the servo by an increment
-    // take measurement 
-    // update the array tracker
+    // while move the servo by an increment
+      // take measurement 
+      // update the array tracker
+      // add some value to the previous measurements for error of moving
+      // we now know where the object (if there is one is)
+      // move towards the gradient with lowest value)
+  // if there is an object in front, turn towards the area with the current lowest gradient in values (in place)
+      // shift values in array left or right depending on the movement made. 
   
   
 /*
