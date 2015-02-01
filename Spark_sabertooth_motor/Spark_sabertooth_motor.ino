@@ -3,7 +3,6 @@
  * 
  * @author: Audrey Yeoh
  *************************************************************/
-// to do: get encoder values to make 2d map
 
 #include "NewPing.h"
 #include "GP2D02.h"
@@ -13,13 +12,15 @@
 // array size of the 2d "mapping" (doesn't actually map without encoder data)
 #define ARRAY_SIZE 20
 // 2 ir on the servo, servo steps = array size /2 
-#define SERVO_STEPS 10
-// Servo increment: 18 degrees? 
-#define SERVO_INC 180/SERVO_STEPS
+#define SERVO_STEPS ARRAY_SIZE/2
+// Servo increment: 9 degrees? 
+#define SERVO_INC 90/SERVO_STEPS
+// each array bracket is 9 degrees diff
 
 Servo ir_servo;
 int ir_map[] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int forward_error = 5;
 
 int servo_direction = SERVO_INC;
 int servo_pos = 0;
@@ -98,12 +99,13 @@ void loop(){
   // moving forward if nothing is in the front (look in the array (middle values)) and if it is not a new array
   if(checkCenterClear() && !newArray()){
     forward(30, 20); // move forward a little
-    if(servo_pos + servo_direction >180){
+    if(servo_pos + servo_direction > 90){
       servo_direction = -servo_direction;
     }
     // while moving forward, move the servo by an increment
     int servo_target = servo_pos + servo_direction;
-    servo.write(servo_target);
+    ir_servo.write(servo_target);
+    delay(10);
     
     // take measurement 
     ir_front_right.refresh();
@@ -112,9 +114,14 @@ void loop(){
     byte dist_front_left = ir_front_left.read();
     
     // update the array tracker
-    // add some value to the previous measurements for error of moving
+    ir_map[servo_pos/9] = dist_front_left - forward_error;
+    ir_map[servo_pos/9+ARRAY_SIZE/2] = dist_front_right - forward_error;
+    // update for errors in the past values from moving forward!
+    updateError();
+    
     // we now know where the object (if there is one is)
-    // move towards the gradient with lowest value)
+    // TODO?: move towards the gradient with lowest value? Or just keep moving forward anyways? 
+    // Maybe a pid with confidence towards the values that seem to be further away. 
   }
   // if new array grab measurements first
   // take full array measurement
@@ -172,6 +179,17 @@ boolean checkCenterClear(){
     if(ir_map[i] > forward_thresh) return false;
   }
   return true;
+}
+
+/* update for map error from moving forward while taking the measurement. 
+ * The update adds a small value to the values already in the map 
+ * The current measurement does not have the error and therefore the error is 
+ * removed from the measurement before it is added into the ir_map.
+ */ 
+void updateError(){
+  for (int i = 0; i < ARRAY_SIZE; i++){
+    ir_map[i] += forward_error;
+  }
 }
 
 
