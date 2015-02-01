@@ -10,9 +10,18 @@
 #include <Servo.h> 
 
 #define STOP 128
+// array size of the 2d "mapping" (doesn't actually map without encoder data)
+#define ARRAY_SIZE 20
+// 2 ir on the servo, servo steps = array size /2 
+#define SERVO_STEPS 10
+// Servo increment: 18 degrees? 
+#define SERVO_INC 180/SERVO_STEPS
 
 Servo ir_servo;
+int ir_map[] = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+int servo_direction = SERVO_INC;
 int servo_pos = 0;
 int pin_servo = 9;
 
@@ -86,38 +95,49 @@ void right(int time, int left, int right){
 
 void loop(){
 
-  ir_front_right.refresh();
-  byte dist_front_right = ir_front_right.read();
-  ir_front_left.refresh();
-  byte dist_front_left = ir_front_left.read();
-  
-  // moving forward if nothing is in the front (look in the array (middle values))
-    // while move the servo by an increment
-      // take measurement 
-      // update the array tracker
-      // add some value to the previous measurements for error of moving
-      // we now know where the object (if there is one is)
-      // move towards the gradient with lowest value)
-  // if there is an object in front, turn towards the area with the current lowest gradient in values (in place)
-      // shift values in array left or right depending on the movement made. 
-  
-  
-/*
-  if(dist_front_right > forward_thresh || dist_front_left > forward_thresh){
-    brake(100);
+  // moving forward if nothing is in the front (look in the array (middle values)) and if it is not a new array
+  if(checkCenterClear() && !newArray()){
+    forward(30, 20); // move forward a little
+    if(servo_pos + servo_direction >180){
+      servo_direction = -servo_direction;
+    }
+    // while moving forward, move the servo by an increment
+    int servo_target = servo_pos + servo_direction;
+    servo.write(servo_target);
+    
+    // take measurement 
+    ir_front_right.refresh();
+    byte dist_front_right = ir_front_right.read();
+    ir_front_left.refresh();
+    byte dist_front_left = ir_front_left.read();
+    
+    // update the array tracker
+    // add some value to the previous measurements for error of moving
+    // we now know where the object (if there is one is)
+    // move towards the gradient with lowest value)
   }
-  else{
-    forward(100, 30);
-  }*/
+  // if new array grab measurements first
+  // take full array measurement
+  // if there is an object in front, turn towards the area with the current lowest gradient in values (in place)
+  // shift values in array left or right depending on the movement made. 
 
-/*
+
+  /*
+  if(dist_front_right > forward_thresh || dist_front_left > forward_thresh){
+   brake(100);
+   }
+   else{
+   forward(100, 30);
+   }*/
+
+  /*
   Serial.print(dist_front_right);
-  Serial.print("\t");  
-  Serial.print(dist_front_left);
-  Serial.print("\t");
-  Serial.print(dist_left);
-  Serial.print("\t");
-  Serial.println(dist_right);*/
+   Serial.print("\t");  
+   Serial.print(dist_front_left);
+   Serial.print("\t");
+   Serial.print(dist_left);
+   Serial.print("\t");
+   Serial.println(dist_right);*/
 
   /*
   forward(1000, 30);
@@ -126,6 +146,32 @@ void loop(){
    brake(2000);
    left(1000, 150, STOP);
    right(1000, STOP, 150);*/
+}
+
+/* If it's a new array, all values should be set to 0
+ */
+boolean newArray(){
+  for(int i = 0; i < ARRAY_SIZE; i ++){
+    if (ir_map[i] != 0) return false; 
+  }
+  return true;
+}
+
+/* Checks if the center is clear from obstacles and the robot is
+ * alright to move forward. This is done by checking the center few 
+ * points on the map to determine whether that part of the path is clear. 
+ * Returns a true for a clear path
+ */
+boolean checkCenterClear(){
+  int centerGroup = 6; // number of values to check to certify center is "clear"
+  for (int i = ARRAY_SIZE/2; i < (ARRAY_SIZE/2+centerGroup/2); i++){
+    if(ir_map[i] > forward_thresh) return false; // that means there is something close
+  }
+
+  for (int i = ARRAY_SIZE/2-1; i > (ARRAY_SIZE/2-centerGroup/2-1); i--){
+    if(ir_map[i] > forward_thresh) return false;
+  }
+  return true;
 }
 
 
