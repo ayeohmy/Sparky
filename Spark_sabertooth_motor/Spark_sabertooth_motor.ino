@@ -8,6 +8,7 @@
 #include "NewPing.h"
 #include "GP2D02.h"
 #include <Servo.h> 
+#include "Motors.h"
 
 #define STOP 128
 
@@ -42,46 +43,14 @@ GP2D02 ir_front_right(front_right_vo, front_right_vin);
 GP2D02 ir_front_left(front_left_vo, front_left_vin);
 //GP2D02 ir_left(left_vo, left_vin);
 //GP2D02 ir_right(right_vo, right_vin);
+Motors motor(pin_motorA, pin_motorB);
 
 void setup(){
-  pinMode(pin_motorA, OUTPUT);
-  pinMode(pin_motorB, OUTPUT);
+  //pinMode(pin_motorA, OUTPUT);
+  //pinMode(pin_motorB, OUTPUT);
   ir_servo.attach(pin_servo);
   Serial.begin(115200);
-  brake(1000);
-}
-
-
-void forward(int time, int sp){
-  int target_sp = map(sp, 0, 100, 128, 255);
-  analogWrite(pin_motorA, target_sp);
-  analogWrite(pin_motorB, target_sp);
-  delay(time);
-}
-
-void backward(int time, int sp){
-  int target_sp = map(sp, 0, 100, 127, 0);
-  analogWrite(pin_motorA, target_sp);
-  analogWrite(pin_motorB, target_sp);
-  delay(time);
-}
-
-void brake(int time){
-  analogWrite(pin_motorA, 128);
-  analogWrite(pin_motorB, 128);
-  delay(time);
-}
-
-void left(int time, int left, int right){
-  analogWrite(pin_motorA, left);
-  analogWrite(pin_motorB, right);
-  delay(time);
-}
-
-void right(int time, int left, int right){
-  analogWrite(pin_motorA, left);
-  analogWrite(pin_motorB, right);
-  delay(time);
+  motor.brake(1000);
 }
 
 void loop(){
@@ -105,22 +74,18 @@ void loop(){
     forward(100, 30);
   }*/
 
-/*
+
   Serial.print(dist_front_right);
   Serial.print("\t");  
-  Serial.print(dist_front_left);
-  Serial.print("\t");
-  Serial.print(dist_left);
-  Serial.print("\t");
-  Serial.println(dist_right);*/
+  Serial.println(dist_front_left);
 
-  /*
-  forward(1000, 30);
-   brake(2000);
-   backward(1000, 30);
-   brake(2000);
-   left(1000, 150, STOP);
-   right(1000, STOP, 150);*/
+  
+   motor.forward(1000, 30);
+   motor.brake(2000);
+   motor.backward(1000, 30);
+   motor.brake(2000);
+   motor.left(1000, 150, STOP);
+   motor.right(1000, STOP, 150);
 }
 
 
