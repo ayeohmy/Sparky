@@ -40,8 +40,8 @@ const int INPUT_DATA_PIN = 7;
 // declare IR objects
 GP2D02 ir_front_right(front_right_vo, front_right_vin);
 GP2D02 ir_front_left(front_left_vo, front_left_vin);
-GP2D02 ir_left(left_vo, left_vin);
-GP2D02 ir_right(right_vo, right_vin);
+//GP2D02 ir_left(left_vo, left_vin);
+//GP2D02 ir_right(right_vo, right_vin);
 
 void setup(){
   pinMode(pin_motorA, OUTPUT);
